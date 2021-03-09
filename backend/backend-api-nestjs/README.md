@@ -35,8 +35,8 @@ $ cd joyjet-backend
 * Install the dependencies and start the server:
 
 ```
-$ yarn install
-$ yarn dev
+$ yarn
+$ yarn start:dev
 ```
 
 or
