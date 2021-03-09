@@ -43,7 +43,7 @@ or
 
 ```
 $ npm install
-$ npm dev
+$ npm start:dev
 ```
 
 ## Unit Tests
