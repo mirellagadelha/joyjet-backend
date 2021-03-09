@@ -1,12 +1,12 @@
 import { IsNumber, IsString } from 'class-validator';
 
 export class ArticleDto {
-    @IsNumber()
-    id: number;
+  @IsNumber()
+  readonly id: number;
 
-    @IsString()
-    name: string;
+  @IsString()
+  readonly name: string;
     
-    @IsNumber()
-    price: number;
+  @IsNumber()
+  readonly price: number;
 }

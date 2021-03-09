@@ -1,68 +1,65 @@
-import { Injectable } from '@nestjs/common';
-import { CartItemDto } from './dto/cart-item.dto';
-import { CheckoutCarPostDto } from './dto/checkout-cart-post.dto';
-import { CartCheckoutDto } from './dto/cart-checkout.dto';
-import { ArticleDto } from './dto/article.dto';
-import { CheckoutCartsResponseDto } from './dto/checkout-cart-response.dto';
-import { DeliveryFeesDto } from './dto/delivery-fee.dto';
-import { ArticleDiscountDto } from './dto/article-discount.dto';
+import { HttpException, HttpStatus, Injectable, UseFilters } from '@nestjs/common';
+import { 
+  ArticleDiscountDto,
+  ArticleDto,
+  CartItemDto, 
+  CheckoutCarPostDto, 
+  CartCheckoutDto,
+  CheckoutCartResponseDto,
+  DeliveryFeeDto
+} from './dto';
 
 @Injectable()
 export class CheckoutService {
-  private cartsResponse: CheckoutCartsResponseDto;
+  private cartsResponse: CheckoutCartResponseDto;
 
-  processCheckout(checkoutCartPost: CheckoutCarPostDto) {
-    const { 
-      articles, 
+  processCheckout(checkoutCartPost: CheckoutCarPostDto): CheckoutCartResponseDto {
+    const {
+      articles,
       carts,
       discounts,
-      delivery_fees: deliveryFees,
+      delivery_fees: deliveryFees
     } = checkoutCartPost;
 
-    const cartCheckout = [];
+    const checkout = [];
 
     carts.map((cart) => {
-      const cartTotal: CartCheckoutDto = { 
+      const cartCheckout: CartCheckoutDto = { 
         id: cart.id, 
-        total: this.getTotalCart(articles, cart.items, deliveryFees, discounts)
+        total: this.getTotalCart(articles, cart.items, discounts, deliveryFees)
       };
 
-      cartCheckout.push(cartTotal);
+      checkout.push(cartCheckout);
     });
 
-    this.cartsResponse = { carts: cartCheckout }
+    this.cartsResponse = { carts: checkout }
     return this.cartsResponse;
   }
 
-  getTotalCart(articles: ArticleDto[], carts: CartItemDto[], deliveryFees: DeliveryFeesDto[], discounts: ArticleDiscountDto[]) {
+  getTotalCart(articles: ArticleDto[], carts: CartItemDto[],  discounts: ArticleDiscountDto[], deliveryFees: DeliveryFeeDto[]): number {
     let articlesTotal = carts
       .map(({ article_id, quantity }) => {
         const article =  articles.find(article => article.id === article_id);
+
+        if(!article){
+          throw new HttpException(`Article with id ${article_id} not found in list`, HttpStatus.NOT_FOUND);
+        }
+
         const price = article.price;
         const discountValue = this.getDiscount(article, discounts); 
 
         return (price - discountValue) * quantity;
-      })
-      .reduce((acc, cur) => acc + cur, 0);
+    })
+    .reduce((acc, cur) => acc + cur, 0);
 
     articlesTotal += this.getDeliveryFee(articlesTotal, deliveryFees);
 
     return Math.trunc(articlesTotal);
   }
 
-
-  getDeliveryFee(total: number, deliveryFees: DeliveryFeesDto[]) {
-    const fee =  deliveryFees.find(fee => total >= fee.eligible_transaction_volume.min_price
-      && total < fee.eligible_transaction_volume.max_price);
-
-    if (fee != null) return fee.price;
-    
-    return 0;
-  }
-
-  getDiscount(article: ArticleDto, discounts: ArticleDiscountDto[]) {
+  getDiscount(article: ArticleDto, discounts: ArticleDiscountDto[]): number {
     const discount =  discounts.find(discount => discount.article_id === article.id);
-    
+
     if (!discount) return 0;
 
     switch (discount.type) {
@@ -73,5 +70,14 @@ export class CheckoutService {
       default:
         return 0;
     }
+  }
+
+  getDeliveryFee(total: number, deliveryFees: DeliveryFeeDto[]): number {
+    const fee =  deliveryFees.find(fee => total >= fee.eligible_transaction_volume.min_price
+      && total < fee.eligible_transaction_volume.max_price);
+
+    if (fee != null) return fee.price;
+    
+    return 0;
   }
 }

@@ -1,17 +1,13 @@
-import { IsNumber, IsEnum } from 'class-validator';
-
-export enum ArticleDiscountType {
-    amount,
-    percentage
-}
+import { IsIn, IsNumber } from 'class-validator';
+import { ArticleDiscountType } from '../enums/article-discount-type.enum';
 
 export class ArticleDiscountDto {
     @IsNumber()
-    article_id: number;
-    
-    @IsEnum(ArticleDiscountType)
-    type: string;
+    readonly article_id: number;
+
+    @IsIn([...Object.values(ArticleDiscountType)])
+    readonly type: ArticleDiscountType;
     
     @IsNumber()
-    value: number;
+    readonly value: number;
 }

@@ -4,10 +4,10 @@ import { CartItemDto } from './cart-item.dto';
 
 export class CartDto {
     @IsNumber()
-    id: number;
+    readonly id: number;
     
     @ValidateNested({each: true})
     @IsArray()
     @Type(() => CartItemDto)
-    items: CartItemDto[];
+    readonly items: CartItemDto[];
 }

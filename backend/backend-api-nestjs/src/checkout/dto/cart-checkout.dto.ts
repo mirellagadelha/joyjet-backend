@@ -2,8 +2,8 @@ import { IsNumber } from 'class-validator';
 
 export class CartCheckoutDto {
     @IsNumber()
-    id: number;
+    readonly id: number;
     
     @IsNumber()
-    total: number;
+    readonly total: number;
 }
